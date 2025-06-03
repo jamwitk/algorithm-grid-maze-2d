@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Algorithms;
 using System.Runtime.CompilerServices;
+using System.Collections;
 
 
 public enum Algorithm
@@ -40,15 +41,8 @@ public enum Algorithm
             switch (selectedAlgorithm)
             {
                 case Algorithm.Astar:
-                    List<Vector3Int> astarPath = Astar.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
-                    if (astarPath == null)
-                    {
-                        Debug.LogWarning("No path found between start and end positions!");
-                        Debug.Log($"Start position: {gridManager.startTilePosition}, End position: {gridManager.endTilePosition}");
-                        return;
-                    }
-                    Debug.Log($"Path found with {astarPath.Count} steps");
-                    StartCoroutine(gridManager.DrawPath(astarPath));
+                    var astarSteps = Astar.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
+                    StartCoroutine(gridManager.VisualizeAlgorithmSteps(astarSteps));
                     break;
                 case Algorithm.Dijkstra:
                     var DijkstraPath = Dijkstra.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
@@ -56,9 +50,8 @@ public enum Algorithm
                     StartCoroutine(gridManager.DrawPath(DijkstraPath));
                     break;
                 case Algorithm.GeneticAlgorithm:
-                    var GeneticPath = Geneticv2.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
-                    Debug.Log("Current selected algorithm: " + selectedAlgorithm + " Path found: " + GeneticPath.Count + " Path: " + string.Join(",", GeneticPath));
-                    StartCoroutine(gridManager.DrawPath(GeneticPath));
+                    var geneticSteps = Geneticv2.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
+                    StartCoroutine(gridManager.VisualizeAlgorithmSteps(geneticSteps));
                     break;
                 case Algorithm.BruteForce:
                     //path = BruteForce.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);

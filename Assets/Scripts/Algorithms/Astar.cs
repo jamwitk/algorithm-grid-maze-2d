@@ -1,8 +1,23 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
+using System.Collections;
 
 public static class Astar{
+    public class StepData
+    {
+        public List<Vector3Int> currentPath;
+        public List<Vector3Int> neighbors;
+        public Vector3Int currentNode;
+
+        public StepData(List<Vector3Int> path, List<Vector3Int> neighbors, Vector3Int current)
+        {
+            this.currentPath = path;
+            this.neighbors = neighbors;
+            this.currentNode = current;
+        }
+    }
+
     private class Node
     {
         public Vector3Int Position { get; }
@@ -18,7 +33,7 @@ public static class Astar{
         public override int GetHashCode() => Position.GetHashCode();
     }
 
-    public static List<Vector3Int> FindPath(Vector3Int startPos, Vector3Int endPos)
+    public static IEnumerator FindPath(Vector3Int startPos, Vector3Int endPos)
     {
         Node startNode = new Node(startPos);
         Node endNode = new Node(endPos);
@@ -45,10 +60,20 @@ public static class Astar{
 
             if (currentNode.Position.Equals(endNode.Position))
             {
-                return RetracePath(startNode, currentNode);
+                yield return new StepData(RetracePath(startNode, currentNode), new List<Vector3Int>(), currentNode.Position);
+                yield break;
             }
 
-            foreach (Node neighbor in GetNeighbors(currentNode))
+            List<Node> neighbors = GetNeighbors(currentNode);
+            List<Vector3Int> neighborPositions = new List<Vector3Int>();
+            foreach (Node neighbor in neighbors)
+            {
+                neighborPositions.Add(neighbor.Position);
+            }
+
+            yield return new StepData(RetracePath(startNode, currentNode), neighborPositions, currentNode.Position);
+
+            foreach (Node neighbor in neighbors)
             {
                 if (closedSet.Contains(neighbor))
                     continue;
@@ -66,7 +91,7 @@ public static class Astar{
             }
         }
 
-        return null; // No path found
+        yield return null; // No path found
     }
 
     private static List<Node> GetNeighbors(Node node)

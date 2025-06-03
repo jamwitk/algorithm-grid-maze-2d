@@ -61,4 +61,9 @@ public class UIManager : MonoBehaviour
             astarAlgorithmButton.GetComponent<Image>().color = Color.white;
         }
     }
+
+    public void OnClickNextLevelButton()
+    {
+        GridManager.instance.NextLevel();
+    }
 }

@@ -14,6 +14,7 @@ public class GridManager : MonoBehaviour
     public Tile obstacleTile;
     public Tile startTile;
     public Tile endTile;
+    public Tile neighborTile;
     public int startX = -5;
     public int maxX = 4;
     public int startY = 0;
@@ -71,15 +72,82 @@ public class GridManager : MonoBehaviour
             foreach(Vector3Int cell in path){
                 if(tilemap.GetTile(cell) != startTile && tilemap.GetTile(cell) != endTile){
                     tilemap.SetTile(cell, tilePrefab);
-                    yield return new WaitForSeconds(0.2f); // Wait 0.2 seconds between each tile
+                    yield return new WaitForSeconds(0.2f);
                 }
             }
         }
         currentLevelSolved++;    
     }
+
+    public IEnumerator VisualizeAlgorithmSteps(IEnumerator algorithmSteps)
+    {
+        while (algorithmSteps.MoveNext())
+        {
+            var step = algorithmSteps.Current;
+            if (step == null) continue;
+
+            // Clear previous visualization
+            foreach (Vector3Int cell in tilemap.cellBounds.allPositionsWithin)
+            {
+                if (tilemap.GetTile(cell) != startTile && tilemap.GetTile(cell) != endTile && tilemap.GetTile(cell) != obstacleTile)
+                {
+                    tilemap.SetTile(cell, defaultTile);
+                    tilemap.SetColor(cell, Color.white); // reset color
+                }
+            }
+
+            // Handle both Astar.StepData and Geneticv2.StepData
+            if (step is Astar.StepData astarStep)
+            {
+                // Draw current path
+                foreach (Vector3Int cell in astarStep.currentPath)
+                {
+                    if (tilemap.GetTile(cell) != startTile && tilemap.GetTile(cell) != endTile)
+                    {
+                        tilemap.SetTile(cell, tilePrefab);
+                    }
+                }
+
+                // Draw neighbors
+                foreach (Vector3Int cell in astarStep.neighbors)
+                {
+                    if (tilemap.GetTile(cell) != startTile && tilemap.GetTile(cell) != endTile && tilemap.GetTile(cell) != obstacleTile)
+                    {
+                        tilemap.SetTile(cell, neighborTile);
+                    }
+                }
+            }
+            else if (step is Geneticv2.StepData geneticStep)
+            {
+                // Draw best current path
+                foreach (Vector3Int cell in geneticStep.currentPath)
+                {
+                    if (tilemap.GetTile(cell) != startTile && tilemap.GetTile(cell) != endTile)
+                    {
+                        tilemap.SetTile(cell, tilePrefab);
+                    }
+                }
+
+                // Draw explored neighbors of best path
+                foreach (Vector3Int cell in geneticStep.exploredNeighbors)
+                {
+                    if (tilemap.GetTile(cell) != startTile && tilemap.GetTile(cell) != endTile && tilemap.GetTile(cell) != obstacleTile)
+                    {
+                        tilemap.SetTile(cell, neighborTile);
+                    }
+                }
+
+                // Log generation info
+                Debug.Log($"Generation {geneticStep.generation + 1} | Best Fitness: {geneticStep.bestFitness} | Reached Target: {geneticStep.reachedTarget}");
+            }
+
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
         
     public bool IsWalkable(Vector3Int position){
-        return tilemap.GetTile(position) != obstacleTile;
+         // ensure its not out of current tilemap bounds
+        return tilemap.GetTile(position) != null && tilemap.GetTile(position) != obstacleTile;
     }
     public void Reset(){
         startTilePosition = Vector3Int.zero;
@@ -87,10 +155,14 @@ public class GridManager : MonoBehaviour
         foreach(Vector3Int cell in tilemap.cellBounds.allPositionsWithin){
             tilemap.SetTile(cell, defaultTile);
         }
-        if(currentLevelSolved == 1){
-            currentLevel++;
-            currentLevelSolved = 0;
-            SetLevel();
-        }
+        SetLevel();
+        UIManager.instance.SetStartEndTile(startTilePosition, endTilePosition);
+    }
+    public void NextLevel(){
+        Reset();
+        currentLevel++;
+        currentLevelSolved = 0;
+        SetLevel();
+        UIManager.instance.SetStartEndTile(startTilePosition, endTilePosition);
     }
 }
