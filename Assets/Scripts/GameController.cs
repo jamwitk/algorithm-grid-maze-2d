@@ -1,7 +1,10 @@
 using UnityEngine;
+using System.Collections.Generic;
+using Algorithms;
+using System.Runtime.CompilerServices;
 
 
-    public enum Algorithm
+public enum Algorithm
     {
         GeneticAlgorithm = 0,
         Astar = 1,
@@ -23,6 +26,7 @@ using UnityEngine;
         public void SetAlgorithm(int index)
         {
             selectedAlgorithm = (Algorithm)index;
+            Debug.Log("Algorithm selected: " + selectedAlgorithm);
         }
 
         public void SolvePuzzle()
@@ -36,24 +40,39 @@ using UnityEngine;
             switch (selectedAlgorithm)
             {
                 case Algorithm.Astar:
-                    gridManager.FindPath();
+                    List<Vector3Int> astarPath = Astar.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
+                    if (astarPath == null)
+                    {
+                        Debug.LogWarning("No path found between start and end positions!");
+                        Debug.Log($"Start position: {gridManager.startTilePosition}, End position: {gridManager.endTilePosition}");
+                        return;
+                    }
+                    Debug.Log($"Path found with {astarPath.Count} steps");
+                    StartCoroutine(gridManager.DrawPath(astarPath));
                     break;
                 case Algorithm.Dijkstra:
-                    // TODO: Implement Dijkstra's algorithm
-                    Debug.Log("Dijkstra's algorithm not implemented yet");
+                    var DijkstraPath = Dijkstra.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
+                    Debug.Log("Current selected algorithm: " + selectedAlgorithm + " Path found: " + DijkstraPath.Count + " Path: " + string.Join(",", DijkstraPath));
+                    StartCoroutine(gridManager.DrawPath(DijkstraPath));
                     break;
                 case Algorithm.GeneticAlgorithm:
-                    // TODO: Implement Genetic Algorithm
-                    Debug.Log("Genetic Algorithm not implemented yet");
+                    var GeneticPath = Geneticv2.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
+                    Debug.Log("Current selected algorithm: " + selectedAlgorithm + " Path found: " + GeneticPath.Count + " Path: " + string.Join(",", GeneticPath));
+                    StartCoroutine(gridManager.DrawPath(GeneticPath));
                     break;
                 case Algorithm.BruteForce:
-                    // TODO: Implement Brute Force
-                    Debug.Log("Brute Force algorithm not implemented yet");
+                    //path = BruteForce.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
+                    //gridManager.DrawPath(path);
                     break;
                 default:
                     Debug.LogWarning("Unknown algorithm selected!");
                     break;
             }
         }
+        public void Reset()
+        {
+            gridManager.Reset();
+        }
+        
     }
 

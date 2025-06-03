@@ -62,7 +62,7 @@ private static readonly Move[] validMoves = { Move.Up, Move.Down, Move.Left, Mov
     // Helper to check if a tile is walkable
     // This is a simple check: assumes any tile present is walkable, and null is not.
     // You might need to customize this based on your tile setup (e.g., specific obstacle tiles).
-    private  static bool IsWalkable(Vector3Int position, Tilemap tilemap)
+    private  static bool IsWalkable(Vector3Int position)
     {
         // If you have specific "ground" tiles and "obstacle" tiles:
         // TileBase tile = tilemap.GetTile(position);
@@ -70,7 +70,7 @@ private static readonly Move[] validMoves = { Move.Up, Move.Down, Move.Left, Mov
         // return !IsObstacleTile(tile); // You'd need an IsObstacleTile function
 
         // Simple version: if a tile exists, it's walkable. If outside map or no tile, not walkable.
-        return tilemap.HasTile(position);
+        return GridManager.instance.IsWalkable(position);
     }
 
     private static int ManhattanDistance(Vector3Int a, Vector3Int b)
@@ -78,7 +78,7 @@ private static readonly Move[] validMoves = { Move.Up, Move.Down, Move.Left, Mov
         return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
     }
 
-    private static void DecodeAndEvaluate(Individual individual, Vector3Int startTile, Vector3Int endTile, Tilemap tilemap)
+    private static void DecodeAndEvaluate(Individual individual, Vector3Int startTile, Vector3Int endTile)
     {
         individual.DecodedPath.Clear();
         individual.DecodedPath.Add(startTile);
@@ -95,7 +95,7 @@ private static readonly Move[] validMoves = { Move.Up, Move.Down, Move.Left, Mov
 
             Vector3Int nextPos = currentPos + moveVectors[(int)move];
 
-            if (!IsWalkable(nextPos, tilemap))
+            if (!IsWalkable(nextPos))
             {
                 // Hit an obstacle or went off map, path ends here
                 break;
@@ -149,11 +149,11 @@ private static readonly Move[] validMoves = { Move.Up, Move.Down, Move.Left, Mov
     }
 
 
-    public  static List<Vector3Int> FindPath(Vector3Int startTile, Vector3Int endTile, Tilemap tilemap)
+        public  static List<Vector3Int> FindPath(Vector3Int startTile, Vector3Int endTile)
     {
         // --- Basic Sanity Checks ---
-        if (!IsWalkable(startTile, tilemap)) return null; // Start is an obstacle
-        if (!IsWalkable(endTile, tilemap)) return null;   // End is an obstacle
+        if (!IsWalkable(startTile)) return null; // Start is an obstacle
+        if (!IsWalkable(endTile)) return null;   // End is an obstacle
         if (startTile == endTile) return new List<Vector3Int> { startTile };
 
         // Heuristic for max path segment length
@@ -177,7 +177,7 @@ private static readonly Move[] validMoves = { Move.Up, Move.Down, Move.Left, Mov
             // --- a. Evaluate Fitness ---
             foreach (var individual in population)
             {
-                DecodeAndEvaluate(individual, startTile, endTile, tilemap);
+                DecodeAndEvaluate(individual, startTile, endTile);
             }
 
             // Sort population by fitness (descending)
@@ -257,7 +257,7 @@ private static readonly Move[] validMoves = { Move.Up, Move.Down, Move.Left, Mov
         // --- 3. After Loop: Return best solution found ---
         // Re-evaluate the bestOverallIndividual to ensure its DecodedPath is current
         if (bestOverallIndividual != null) {
-            DecodeAndEvaluate(bestOverallIndividual, startTile, endTile, tilemap); // Ensure DecodedPath is set
+            DecodeAndEvaluate(bestOverallIndividual, startTile, endTile); // Ensure DecodedPath is set
              if (bestOverallIndividual.ReachedTarget)
             {
                 Debug.Log($"GA finished. Best path found. Length: {bestOverallIndividual.DecodedPath.Count}");

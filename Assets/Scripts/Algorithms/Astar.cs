@@ -18,7 +18,7 @@ public static class Astar{
         public override int GetHashCode() => Position.GetHashCode();
     }
 
-    public static List<Vector3Int> FindPath(Vector3Int startPos, Vector3Int endPos, Tilemap tilemap)
+    public static List<Vector3Int> FindPath(Vector3Int startPos, Vector3Int endPos)
     {
         Node startNode = new Node(startPos);
         Node endNode = new Node(endPos);
@@ -48,7 +48,7 @@ public static class Astar{
                 return RetracePath(startNode, currentNode);
             }
 
-            foreach (Node neighbor in GetNeighbors(currentNode, tilemap))
+            foreach (Node neighbor in GetNeighbors(currentNode))
             {
                 if (closedSet.Contains(neighbor))
                     continue;
@@ -69,7 +69,7 @@ public static class Astar{
         return null; // No path found
     }
 
-    private static List<Node> GetNeighbors(Node node, Tilemap tilemap)
+    private static List<Node> GetNeighbors(Node node)
     {
         List<Node> neighbors = new List<Node>();
         Vector3Int[] directions = new Vector3Int[]
@@ -83,7 +83,7 @@ public static class Astar{
         foreach (Vector3Int dir in directions)
         {
             Vector3Int neighborPos = node.Position + dir;
-            if (IsWalkable(neighborPos, tilemap))
+            if (IsWalkable(neighborPos))
             {
                 neighbors.Add(new Node(neighborPos));
             }
@@ -92,9 +92,9 @@ public static class Astar{
         return neighbors;
     }
 
-    private static bool IsWalkable(Vector3Int pos, Tilemap tilemap)
+    private static bool IsWalkable(Vector3Int pos)
     {
-        return tilemap.HasTile(pos);
+        return GridManager.instance.IsWalkable(pos);
     }
 
     private static int GetDistance(Node nodeA, Node nodeB)
