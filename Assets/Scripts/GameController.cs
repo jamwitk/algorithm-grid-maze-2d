@@ -7,7 +7,7 @@ using System.Collections;
 
 public enum Algorithm
     {
-        GeneticAlgorithm = 0,
+        Genetic = 0,
         Astar = 1,
         Dijkstra = 2, 
         BruteForce = 3
@@ -22,12 +22,11 @@ public enum Algorithm
         {
             instance = this;
         }
-        public Algorithm selectedAlgorithm = Algorithm.GeneticAlgorithm;
+        public Algorithm selectedAlgorithm = Algorithm.Genetic;
 
         public void SetAlgorithm(int index)
         {
             selectedAlgorithm = (Algorithm)index;
-            Debug.Log("Algorithm selected: " + selectedAlgorithm);
         }
 
         public void SolvePuzzle()
@@ -45,11 +44,10 @@ public enum Algorithm
                     StartCoroutine(gridManager.VisualizeAlgorithmSteps(astarSteps));
                     break;
                 case Algorithm.Dijkstra:
-                    var DijkstraPath = Dijkstra.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
-                    Debug.Log("Current selected algorithm: " + selectedAlgorithm + " Path found: " + DijkstraPath.Count + " Path: " + string.Join(",", DijkstraPath));
-                    StartCoroutine(gridManager.DrawPath(DijkstraPath));
+                    var dijkstraSteps = Dijkstra.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
+                    StartCoroutine(gridManager.VisualizeAlgorithmSteps(dijkstraSteps));
                     break;
-                case Algorithm.GeneticAlgorithm:
+                case Algorithm.Genetic:
                     var geneticSteps = Geneticv2.FindPath(gridManager.startTilePosition, gridManager.endTilePosition);
                     StartCoroutine(gridManager.VisualizeAlgorithmSteps(geneticSteps));
                     break;

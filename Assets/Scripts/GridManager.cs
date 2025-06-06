@@ -38,17 +38,17 @@ public class GridManager : MonoBehaviour
             for(int j = 0; j < levels[currentLevel].grid[i].row.Count; j++){
                 var xValue = startX + j;
                 var yValue = startY - i;
-                if(levels[currentLevel].grid[i].row[j] == 0){
+                if(levels[currentLevel].grid[i].row[j] == 0){ // default tile
                     SetTile(xValue, yValue, defaultTile);
                 }
-                else if(levels[currentLevel].grid[i].row[j] == 1){
+                else if(levels[currentLevel].grid[i].row[j] == 1){ // obstacle tile
                     SetTile(xValue, yValue, obstacleTile);
                 }
-                else if(levels[currentLevel].grid[i].row[j] == 2){
+                else if(levels[currentLevel].grid[i].row[j] == 2){ // start tile
                     SetTile(xValue, yValue, startTile);
                     startTilePosition = new Vector3Int(xValue, yValue, 0);
                 }
-                else if(levels[currentLevel].grid[i].row[j] == 3){
+                else if(levels[currentLevel].grid[i].row[j] == 3){ // end tile
                     SetTile(xValue, yValue, endTile);
                     endTilePosition = new Vector3Int(xValue, yValue, 0);
                 }
@@ -57,7 +57,8 @@ public class GridManager : MonoBehaviour
         SetUI();
     }
     private void SetUI(){
-        UIManager.instance.SetStartEndTile(startTilePosition, endTilePosition);
+        UIManager.instance.SetStartEndTileUI(startTilePosition, endTilePosition);
+        UIManager.instance.SetMainLevelText((currentLevel+1));
     }
     public void SetTile(int j, int i, Tile tile){
         Vector3Int cellPosition = tilemap.WorldToCell(new Vector3(j, i, 0));
@@ -116,6 +117,8 @@ public class GridManager : MonoBehaviour
                         tilemap.SetTile(cell, neighborTile);
                     }
                 }
+                UIManager.instance.SetResultText($"A* | Current Path: {astarStep.currentPath.Count} | Neighbors: {astarStep.neighbors.Count}");
+                Debug.Log($"A* | Current Path: {astarStep.currentPath.Count} | Neighbors: {astarStep.neighbors.Count}");
             }
             else if (step is Geneticv2.StepData geneticStep)
             {
@@ -138,10 +141,33 @@ public class GridManager : MonoBehaviour
                 }
 
                 // Log generation info
+                UIManager.instance.SetResultText($"Generation {geneticStep.generation + 1} | Best Fitness: {geneticStep.bestFitness} | Reached Target: {geneticStep.reachedTarget}");
                 Debug.Log($"Generation {geneticStep.generation + 1} | Best Fitness: {geneticStep.bestFitness} | Reached Target: {geneticStep.reachedTarget}");
             }
 
-            yield return new WaitForSeconds(0.5f);
+            else if (step is Dijkstra.StepData dijkstraStep)
+            {
+                // Draw current path
+                foreach (Vector3Int cell in dijkstraStep.currentPath)
+                {
+                    if (tilemap.GetTile(cell) != startTile && tilemap.GetTile(cell) != endTile)
+                    {
+                        tilemap.SetTile(cell, tilePrefab);
+                    }
+                }
+
+                // Draw neighbors
+                foreach (Vector3Int cell in dijkstraStep.neighbors)
+                {
+                    if (tilemap.GetTile(cell) != startTile && tilemap.GetTile(cell) != endTile && tilemap.GetTile(cell) != obstacleTile)
+                    {
+                        tilemap.SetTile(cell, neighborTile);
+                    }
+                }
+                UIManager.instance.SetResultText($"Dijkstra | Current Path: {dijkstraStep.currentPath.Count} | Iterations: {dijkstraStep.iterations}");
+            }
+            //yield return new WaitForSeconds(0.5f);
+            yield return new WaitForEndOfFrame();
         }
     }
         
@@ -156,13 +182,13 @@ public class GridManager : MonoBehaviour
             tilemap.SetTile(cell, defaultTile);
         }
         SetLevel();
-        UIManager.instance.SetStartEndTile(startTilePosition, endTilePosition);
+        SetUI();
     }
     public void NextLevel(){
         Reset();
         currentLevel++;
         currentLevelSolved = 0;
         SetLevel();
-        UIManager.instance.SetStartEndTile(startTilePosition, endTilePosition);
+        SetUI();
     }
 }

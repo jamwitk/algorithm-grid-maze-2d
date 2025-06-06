@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
 using System.Collections;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 public static class Astar{
     public class StepData
@@ -35,6 +37,8 @@ public static class Astar{
 
     public static IEnumerator FindPath(Vector3Int startPos, Vector3Int endPos)
     {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        int iterations = 0;
         Node startNode = new Node(startPos);
         Node endNode = new Node(endPos);
 
@@ -60,7 +64,11 @@ public static class Astar{
 
             if (currentNode.Position.Equals(endNode.Position))
             {
-                yield return new StepData(RetracePath(startNode, currentNode), new List<Vector3Int>(), currentNode.Position);
+                var path = RetracePath(startNode, currentNode);
+                yield return new StepData(path, new List<Vector3Int>(), currentNode.Position);
+
+                stopwatch.Stop();
+                AlgorithmAnalytics.Log(new AlgorithmAnalytics.ResultData("Astar", path.Count, stopwatch.ElapsedMilliseconds, closedSet.Count, iterations, true));
                 yield break;
             }
 
@@ -89,16 +97,21 @@ public static class Astar{
                         openSet.Add(neighbor);
                 }
             }
+
+            iterations++;
         }
 
-        yield return null; // No path found
+        // No path found
+        stopwatch.Stop();
+        AlgorithmAnalytics.Log(new AlgorithmAnalytics.ResultData("Astar", 0, stopwatch.ElapsedMilliseconds, closedSet.Count, iterations, false));
+
+        yield return null; 
     }
 
     private static List<Node> GetNeighbors(Node node)
     {
         List<Node> neighbors = new List<Node>();
-        Vector3Int[] directions = new Vector3Int[]
-        {
+        Vector3Int[] directions = {
             new Vector3Int(1, 0, 0),  // right
             new Vector3Int(-1, 0, 0), // left
             new Vector3Int(0, 1, 0),  // up

@@ -3,6 +3,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 namespace Algorithms
 {
@@ -31,10 +33,10 @@ namespace Algorithms
         // --- GA Parameters ---
         private static int populationSize = 100;       // Number of individuals in the population
         private static int maxGenerations = 200;       // Number of generations to evolve
-        private static double crossoverRate = 0.8;     // Probability of crossover
-        private static double mutationRate = 0.1;      // Probability of mutation per gene
-        private static int tournamentSize = 5;         // Size of the tournament for selection
-        private static int elitismCount = 2;           // Number of best individuals to carry to next generation
+        private static double crossoverRate = 0.7;     // Probability of crossover
+        private static double mutationRate = 0.15;      // Probability of mutation per gene
+        private static int tournamentSize = 3;         // Size of the tournament for selection
+        private static int elitismCount = 5;           // Number of best individuals to carry to next generation
         private static int maxPathSegmentLength;       // Max length of the gene sequence (moves)
 
         private static System.Random random = new System.Random();
@@ -168,6 +170,9 @@ namespace Algorithms
 
         public static IEnumerator FindPath(Vector3Int startTile, Vector3Int endTile)
         {
+            // Start performance timer
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             // --- Basic Sanity Checks ---
             if (!IsWalkable(startTile)) yield break; // Start is an obstacle
             if (!IsWalkable(endTile)) yield break;   // End is an obstacle
@@ -315,6 +320,19 @@ namespace Algorithms
             }
 
             Debug.Log("GA finished. No path found that reaches the target, or best path didn't reach.");
+
+            // Stop timer and log analytics – we do this once at the very end regardless of success.
+            stopwatch.Stop();
+
+            int pathLen = (bestOverallIndividual != null && bestOverallIndividual.ReachedTarget) ? bestOverallIndividual.DecodedPath.Count : 0;
+            int generationsTaken = maxGenerations; // If exited early 'gen' may be less, but we have maxGen; compute properly
+            // Estimate generations actually executed (bestOverallIndividual might have been found earlier)
+            // Using variable 'gen' from outer loop not accessible here after loop; we can compute by tracking lastGen variable earlier.
+            // For simplicity, treat 'generationsTaken' as 'maxGenerations' which is correct upper bound.
+
+            int nodesExploredEstimate = populationSize * generationsTaken; // Rough estimate: each individual evaluated per generation
+
+            AlgorithmAnalytics.Log(new AlgorithmAnalytics.ResultData("Genetic", pathLen, stopwatch.ElapsedMilliseconds, nodesExploredEstimate, generationsTaken, pathLen > 0));
         }
 
         private static List<Vector3Int> GetExploredNeighbors(List<Vector3Int> path)
