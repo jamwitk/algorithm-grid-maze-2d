@@ -31,12 +31,12 @@ namespace Algorithms
         }
 
         // --- GA Parameters ---
-        private static int populationSize = 100;       // Number of individuals in the population
-        private static int maxGenerations = 200;       // Number of generations to evolve
-        private static double crossoverRate = 0.7;     // Probability of crossover
+        private static int populationSize = 500;       // Number of individuals in the population
+        private static int maxGenerations = 1000;       // Number of generations to evolve
+        private static double crossoverRate = 0.4;     // Probability of crossover
         private static double mutationRate = 0.15;      // Probability of mutation per gene
-        private static int tournamentSize = 3;         // Size of the tournament for selection
-        private static int elitismCount = 5;           // Number of best individuals to carry to next generation
+        private static int tournamentSize = 4;         // Size of the tournament for selection
+        private static int elitismCount = 10;           // Number of best individuals to carry to next generation
         private static int maxPathSegmentLength;       // Max length of the gene sequence (moves)
 
         private static System.Random random = new System.Random();

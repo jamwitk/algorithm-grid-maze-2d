@@ -1,9 +1,7 @@
 using UnityEngine;
-using UnityEngine.Tilemaps;
 using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics;
-using Debug = UnityEngine.Debug;
 
 public static class Astar{
     public class StepData
